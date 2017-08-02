@@ -1468,6 +1468,12 @@ ifeq ($(BUILD_DIAG_VERSION), y)
 INCS +=		$(HOST_DIAG_LOG_INC)
 endif
 
+# TODO: remove me b/62058353
+EXTRA_CFLAGS += \
+	-Wno-parentheses-equality \
+	-Wno-logical-not-parentheses \
+	-Wno-enum-conversion \
+
 INCS +=		$(DISA_INC)
 INCS +=		$(ACTION_OUI_INC)
 
