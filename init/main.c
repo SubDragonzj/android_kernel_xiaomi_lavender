@@ -130,6 +130,163 @@ static char *initcall_command_line;
 static char *execute_command;
 static char *ramdisk_execute_command;
 
+int devicemodel;
+bool sdm660;
+bool detected_android_r = false;
+static unsigned int android_version = 9;
+
+static int __init set_android_version(char *val)
+{
+	get_option(&val, &android_version);
+	pr_err("Kernel: AGNi android version detected = %d \n", android_version);
+#ifdef CONFIG_KERNEL_CUSTOM_E7S
+	devicemodel=1; /* whyred */
+	sdm660=false;
+#elif defined(CONFIG_KERNEL_CUSTOM_E7T)
+	devicemodel=2; /* tulip */
+	sdm660=false;
+#elif defined(CONFIG_KERNEL_CUSTOM_D2S) && !defined(CONFIG_KERNEL_CUSTOM_D2S_JASMINE)
+	devicemodel=3; /* wayne */
+	sdm660=true;
+#elif defined(CONFIG_KERNEL_CUSTOM_D2S_JASMINE)
+	devicemodel=4; /* jasmine */
+	sdm660=true;
+#elif defined(CONFIG_KERNEL_CUSTOM_F7A)
+	devicemodel=5; /* lavender */
+	sdm660=true;
+#else
+	devicemodel=0;
+	sdm660=false;
+#endif
+
+	if (android_version > 10)
+		detected_android_r = true;
+	else
+		detected_android_r = false;
+
+	return 0;
+}
+__setup("android.ver=", set_android_version);
+
+unsigned int get_android_version(void)
+{
+	return android_version;
+}
+EXPORT_SYMBOL_GPL(get_android_version);
+EXPORT_SYMBOL_GPL(devicemodel);
+EXPORT_SYMBOL_GPL(sdm660);
+
+bool miuirom = true;
+extern int srgb_enabled;
+static int __init set_miui_rom(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		miuirom = true;
+		srgb_enabled = 1;
+		pr_err("Kernel: AGNi miuirom = true, srgb_enabled = 1");
+	} else {
+		miuirom = false;
+		srgb_enabled = 0;
+		pr_err("Kernel: AGNi miuirom = false, srgb_enabled = 0");
+	}
+
+	return 0;
+}
+__setup("miui=", set_miui_rom);
+EXPORT_SYMBOL_GPL(miuirom);
+
+#if defined(CONFIG_KERNEL_CUSTOM_E7S) || defined(CONFIG_KERNEL_CUSTOM_E7T)
+bool srgb_locked = false;
+static int __init set_srgb_lock(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		srgb_locked = true;
+		pr_err("Kernel: AGNi srgb_locked = true");
+	} else {
+		srgb_locked = false;
+		pr_err("Kernel: AGNi srgb_locked = false");
+	}
+
+	return 0;
+}
+__setup("srgblock=", set_srgb_lock);
+#endif
+int cpuoc_state = 0;
+static int __init set_cpuoc(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	cpuoc_state = temp;
+	pr_err("Kernel: AGNi cpu oc level = %d \n", cpuoc_state);
+
+	return 0;
+}
+__setup("cpuoc=", set_cpuoc);
+bool wired_btn_altmode = false;
+static int __init set_wiredbtnmode(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		wired_btn_altmode = true;
+		pr_err("Kernel: AGNi alternate wired button mode = 1");
+	} else {
+		wired_btn_altmode = false;
+		pr_err("Kernel: AGNi alternate wired button mode = 0");
+	}
+
+	return 0;
+}
+__setup("wiredbtnaltmode=", set_wiredbtnmode);
+bool altledmode = false;
+static int __init set_ledmode(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		altledmode = true;
+		pr_err("Kernel: AGNi alternate led mode = 1");
+	} else {
+		altledmode = false;
+		pr_err("Kernel: AGNi alternate led mode = 0 (miui type)");
+	}
+
+	return 0;
+}
+__setup("ledmode=", set_ledmode);
+bool losrom = false;
+static int __init set_los_rom(char *val)
+{
+	unsigned int temp;
+
+	get_option(&val, &temp);
+
+	if (temp) {
+		losrom = true;
+		pr_err("Kernel: AGNi Lineage rom = true");
+	} else {
+		losrom = false;
+		pr_err("Kernel: AGNi Lineage rom = false");
+	}
+
+	return 0;
+}
+__setup("losxattr=", set_los_rom);
+EXPORT_SYMBOL_GPL(losrom);
 /*
  * Used to generate warnings if static_key manipulation functions are used
  * before jump_label_init is called.
